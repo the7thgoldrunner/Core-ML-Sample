@@ -14,7 +14,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate {
     
     @IBOutlet private weak var predictLabel: UILabel!
     @IBOutlet private weak var previewView: UIView!
-    @IBOutlet private weak var visionSwitch: UISwitch!
     
     let inceptionv3model = Inceptionv3()
     private var videoCapture: VideoCapture!
