@@ -12,12 +12,9 @@ import Vision
 
 class ViewController: UIViewController, UIImagePickerControllerDelegate {
     
-    // Outlets to label and view
     @IBOutlet private weak var predictLabel: UILabel!
     @IBOutlet private weak var previewView: UIView!
     @IBOutlet private weak var visionSwitch: UISwitch!
-    
-    // some properties used to control the app and store appropriate values
     
     let inceptionv3model = Inceptionv3()
     private var videoCapture: VideoCapture!
@@ -32,15 +29,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate {
                                     previewContainer: previewView.layer)
         
         videoCapture.imageBufferHandler = {[unowned self] (imageBuffer) in
-            if self.visionSwitch.isOn {
-                // Use Vision
-                self.handleImageBufferWithVision(imageBuffer: imageBuffer)
-            }
-            else {
-                // Use Core ML
-                self.handleImageBufferWithCoreML(imageBuffer: imageBuffer)
-            }
+            self.handleImageBufferWithCoreML(imageBuffer: imageBuffer)
         }
+        
+        self.predictLabel.textAlignment = .center
     }
     
     func handleImageBufferWithCoreML(imageBuffer: CMSampleBuffer) {
@@ -49,10 +41,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate {
         }
         do {
             let prediction = try self.inceptionv3model.prediction(image: self.resize(pixelBuffer: pixelBuffer)!)
+            let isCar = prediction.isCarPrediction()
             DispatchQueue.main.async {
-                if let prob = prediction.classLabelProbs[prediction.classLabel] {
-                    self.predictLabel.text = "\(prediction.classLabel) \(String(describing: prob))"
-                }
+                self.predictLabel.text = isCar ? "-> 🚗 🚙 🏎 <-" : ""
             }
         }
         catch let error as NSError {
