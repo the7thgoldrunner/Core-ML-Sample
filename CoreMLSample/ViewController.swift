@@ -34,6 +34,10 @@ class ViewController: UIViewController {
         self.predictLabel.textAlignment = .center
     }
     
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
     func handleImageBufferWithCoreML(imageBuffer: CMSampleBuffer) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(imageBuffer) else {
             return
