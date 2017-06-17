@@ -10,7 +10,7 @@ import UIKit
 import CoreMedia
 import Vision
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate {
+class ViewController: UIViewController {
     
     @IBOutlet private weak var predictLabel: UILabel!
     @IBOutlet private weak var previewView: UIView!
@@ -152,12 +152,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate {
         guard let videoCapture = videoCapture else {return}
         videoCapture.stopCapture()
         
-        navigationController?.setNavigationBarHidden(false, animated: true)
         super.viewWillDisappear(animated)
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
     }
 }
 
