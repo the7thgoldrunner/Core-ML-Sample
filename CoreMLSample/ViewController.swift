@@ -12,20 +12,36 @@ import Vision
 
 class ViewController: UIViewController {
     
+    private enum Inceptionv3Constants {
+        static let FramesPerSecond: Int32 = 5
+        static let SizeMeasurement = 299
+        
+        static let Size = CGSize(width: Inceptionv3Constants.SizeMeasurement, height: Inceptionv3Constants.SizeMeasurement)
+    }
+    
     @IBOutlet private weak var predictLabel: UILabel!
     @IBOutlet private weak var previewView: UIView!
     
     let inceptionv3model = Inceptionv3()
     private var videoCapture: VideoCapture!
-    private var requests = [VNRequest]()
+    
+    private lazy var rectanglesRequest: VNDetectRectanglesRequest = {
+        let request = VNDetectRectanglesRequest(completionHandler: self.handleRectangles)
+        request.minimumSize = 0.3
+        return request
+    }()
+    
+    private var carFrameView: UIView?
+    private var carObservation: VNDetectedObjectObservation?
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupVision()
-        let spec = VideoSpec(fps: 5, size: CGSize(width: 299, height: 299))
+        //setupVision()
+        let spec = VideoSpec(fps: Inceptionv3Constants.FramesPerSecond, size: Inceptionv3Constants.Size)
         videoCapture = VideoCapture(cameraType: .back,
                                     preferredSpec: spec,
                                     previewContainer: previewView.layer)
+        
         
         videoCapture.imageBufferHandler = {[unowned self] (imageBuffer) in
             self.handleImageBufferWithCoreML(imageBuffer: imageBuffer)
@@ -47,6 +63,11 @@ class ViewController: UIViewController {
             let isCar = prediction.isCarPrediction()
             DispatchQueue.main.async {
                 self.predictLabel.text = isCar ? "-> 🚗 🚙 🏎 <-" : ""
+                self.carFrameView?.isHidden = !isCar
+            }
+            
+            if (isCar) {
+                handleImageBufferWithVision(imageBuffer: imageBuffer)
             }
         }
         catch let error as NSError {
@@ -64,15 +85,130 @@ class ViewController: UIViewController {
         if let cameraIntrinsicData = CMGetAttachment(imageBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, nil) {
             requestOptions = [.cameraIntrinsics:cameraIntrinsicData]
         }
+        let imageRequestHandler = VNImageRequestHandler( cvPixelBuffer: pixelBuffer, orientation: self.exifOrientationFromDeviceOrientation, options: requestOptions)
         
-        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: self.exifOrientationFromDeviceOrientation, options: requestOptions)
+        /*
+        guard let visionModel = try? VNCoreMLModel(for: inceptionv3model.model) else {
+            fatalError("can't load Vision ML model")
+        }
+        let classificationRequest = VNCoreMLRequest(model: visionModel, completionHandler: self.handleRectangles)
+         
+        
+        let trackRequest = VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: CGRect(origin: CGPoint(), size: Inceptionv3Constants.Size)), completionHandler: self.handleRectangles)
+        */
         do {
-            try imageRequestHandler.perform(self.requests)
+            
+            if (self.carObservation != nil) {
+                let trackCarRequest = VNTrackObjectRequest(detectedObjectObservation: self.carObservation!, completionHandler: self.handleCarTracking)
+                try imageRequestHandler.perform([trackCarRequest])
+            } else {
+                try imageRequestHandler.perform([self.rectanglesRequest])
+            }
         } catch {
             print(error)
         }
     }
     
+    func handleRectangles(request: VNRequest, error: Error?) {
+        guard let findings = request.results as? [VNRectangleObservation] else {
+        //guard let findings = request.results as? [VNDetectedObjectObservation] else {
+            DispatchQueue.main.async {
+                self.carFrameView?.isHidden = true
+            }
+            return
+        }
+        print("\(findings.count) found.")
+        guard let detectedRectangle = findings.first else {
+            DispatchQueue.main.async {
+                self.carFrameView?.isHidden = true
+            }
+            return
+        }
+        /*
+        
+        let boundingBox = detectedRectangle.boundingBox.scaled(to: Inceptionv3Constants.Size)
+        let topLeft = detectedRectangle.topLeft.scaled(to: Inceptionv3Constants.Size)
+        let topRight = detectedRectangle.topRight.scaled(to: Inceptionv3Constants.Size)
+        let bottomLeft = detectedRectangle.bottomLeft.scaled(to: Inceptionv3Constants.Size)
+        let bottomRight = detectedRectangle.bottomRight.scaled(to: Inceptionv3Constants.Size)
+        
+        let frame = CGRect(x: bottomLeft.x, y: bottomLeft.y, width: topRight.x - topLeft.x, height: topRight.y - bottomRight.y)
+         */
+        var transformedRect = detectedRectangle.boundingBox
+        //transformedRect.origin.y = 1 - transformedRect.origin.y
+        
+        
+        //let frame = detectedRectangle.boundingBox.scaled(to: Inceptionv3Constants.Size)
+        
+        DispatchQueue.main.async {
+            
+            let frame = self.videoCapture.layerRectConverted(fromMetadataOutputRect: transformedRect)
+            self.carObservation = VNDetectedObjectObservation(boundingBox: frame)
+            
+            
+            /*
+            if (self.carFrameView == nil) {
+                self.carFrameView = UIView(frame: frame)
+                self.view.addSubview(self.carFrameView!)
+                self.carFrameView?.layer.borderColor = UIColor.yellow.cgColor
+                self.carFrameView?.layer.borderWidth = 2.0
+            } else {
+                self.carFrameView?.frame = frame
+                self.carFrameView?.isHidden = false
+            }
+            */
+        }
+        
+    }
+    
+    func handleCarTracking(request: VNRequest, error: Error?) {
+        guard let findings = request.results as? [VNDetectedObjectObservation] else {
+            DispatchQueue.main.async {
+                self.carFrameView?.isHidden = true
+            }
+            return
+        }
+        print("Tracking \(findings.count) findings (cars?).")
+        guard let newObservation = findings.first else {
+            DispatchQueue.main.async {
+                self.carFrameView?.isHidden = true
+            }
+            return
+        }
+        self.carObservation = newObservation
+        /*
+         
+         let boundingBox = detectedRectangle.boundingBox.scaled(to: Inceptionv3Constants.Size)
+         let topLeft = detectedRectangle.topLeft.scaled(to: Inceptionv3Constants.Size)
+         let topRight = detectedRectangle.topRight.scaled(to: Inceptionv3Constants.Size)
+         let bottomLeft = detectedRectangle.bottomLeft.scaled(to: Inceptionv3Constants.Size)
+         let bottomRight = detectedRectangle.bottomRight.scaled(to: Inceptionv3Constants.Size)
+         
+         let frame = CGRect(x: bottomLeft.x, y: bottomLeft.y, width: topRight.x - topLeft.x, height: topRight.y - bottomRight.y)
+         */
+        var transformedRect = newObservation.boundingBox
+        //transformedRect.origin.y = 1 - transformedRect.origin.y
+        
+        
+        //let frame = detectedRectangle.boundingBox.scaled(to: Inceptionv3Constants.Size)
+        let frame = transformedRect
+        print(newObservation.boundingBox)
+        
+        DispatchQueue.main.async {
+            //let frame = self.videoCapture.layerRectConverted(fromMetadataOutputRect: transformedRect)
+            if (self.carFrameView == nil) {
+                self.carFrameView = UIView(frame: frame)
+                self.view.addSubview(self.carFrameView!)
+                self.carFrameView?.layer.borderColor = UIColor.yellow.cgColor
+                self.carFrameView?.layer.borderWidth = 2.0
+            } else {
+                self.carFrameView?.frame = frame
+                self.carFrameView?.isHidden = false
+            }
+        }
+    }
+    
+    /*
     func setupVision() {
         guard let visionModel = try? VNCoreMLModel(for: inceptionv3model.model) else {
             fatalError("can't load Vision ML model")
@@ -92,9 +228,8 @@ class ViewController: UIViewController {
             }
         }
         classificationRequest.imageCropAndScaleOption = VNImageCropAndScaleOptionCenterCrop
-        
-        self.requests = [classificationRequest]
     }
+    */
     
     
     /// only support back camera

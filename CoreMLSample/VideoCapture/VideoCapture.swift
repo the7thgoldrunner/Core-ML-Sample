@@ -109,6 +109,10 @@ class VideoCapture: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
     
+    func layerRectConverted(fromMetadataOutputRect rectInMetadataOutputCoordinates: CGRect) -> CGRect {
+        return (self.previewLayer?.layerRectConverted(fromMetadataOutputRect: rectInMetadataOutputCoordinates))!
+    }
+    
     // =========================================================================
     // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
     

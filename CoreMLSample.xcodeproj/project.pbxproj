@@ -17,6 +17,7 @@
 		A415CAD91EEA4C1800983607 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A415CAD51EEA4BC900983607 /* Main.storyboard */; };
 		AAC46A071EF4574E0069F0E6 /* Inceptionv3.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = AAC46A061EF457460069F0E6 /* Inceptionv3.mlmodel */; };
 		AAC46A091EF5457F0069F0E6 /* CarPrediction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC46A081EF5457F0069F0E6 /* CarPrediction.swift */; };
+		AAC46A0B1EF57C160069F0E6 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC46A0A1EF57C160069F0E6 /* Utilities.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		A415CAD51EEA4BC900983607 /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		AAC46A061EF457460069F0E6 /* Inceptionv3.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = Inceptionv3.mlmodel; sourceTree = "<group>"; };
 		AAC46A081EF5457F0069F0E6 /* CarPrediction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPrediction.swift; sourceTree = "<group>"; };
+		AAC46A0A1EF57C160069F0E6 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 				A415CAAF1EEA437900983607 /* AppDelegate.swift */,
 				A415CAB11EEA437900983607 /* ViewController.swift */,
 				AAC46A081EF5457F0069F0E6 /* CarPrediction.swift */,
+				AAC46A0A1EF57C160069F0E6 /* Utilities.swift */,
 				A415CAD51EEA4BC900983607 /* Main.storyboard */,
 				A415CAB61EEA437900983607 /* Assets.xcassets */,
 				A415CAB81EEA437900983607 /* LaunchScreen.storyboard */,
@@ -165,6 +168,7 @@
 				A415CAB01EEA437900983607 /* AppDelegate.swift in Sources */,
 				A415CAD81EEA4C1000983607 /* AVCaptureDevice+Extension.swift in Sources */,
 				AAC46A091EF5457F0069F0E6 /* CarPrediction.swift in Sources */,
+				AAC46A0B1EF57C160069F0E6 /* Utilities.swift in Sources */,
 				AAC46A071EF4574E0069F0E6 /* Inceptionv3.mlmodel in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
